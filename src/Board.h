@@ -15,6 +15,9 @@ private:
 
 	std::vector<std::string> table;
 
+	int blackToBearOff;
+	int whiteToBearOff;
+
 	std::map<int, int> positions;
 
 	std::vector<Checker*> checkersBlack;
@@ -39,6 +42,8 @@ public:
 	void createTable();
 
 	void makeMove(Move* move, Board* board);
+	void makeSecondMove(Move* move, Board* board);
+
 	bool isValidMove(Move* move, Dice* dice, int turn);
 
 	void updateCheckersOnPosition();
@@ -52,7 +57,9 @@ public:
 	bool canSecondCheckerMove(Checker* checker);
 	std::vector<Board*> getChildren(int color, Dice* dice, Board* board);
 
-	bool isValidMoveAI(int position,Checker* checker);
+	void updatePhase(int color);
+
+	bool isValidMoveAI(int position, Checker* checker);
 
 	bool isValidToPosition(int position, Checker* checker);
 
