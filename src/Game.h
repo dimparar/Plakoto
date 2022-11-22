@@ -21,7 +21,6 @@ private:
 	Move* move;
 	bool secondMove; // played one dice
 
-
 	bool wrongInput;
 
 	int currentTurn;
@@ -36,8 +35,6 @@ public:
 	Game();
 	virtual ~Game();
 	void GameLoop();
-
-	Move* parseInput(std::string input, int turn);
 
 	void setCurrentTurn(int currentTurn);
 	int getCurrentTurn();

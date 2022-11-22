@@ -47,6 +47,7 @@ public:
 	bool isValidMove(Move* move, Dice* dice, int turn);
 
 	void updateCheckersOnPosition();
+	void updateUserMove(int color, Board* board);
 
 	void updateCheckers(int color, Board* board);
 	void printTable();

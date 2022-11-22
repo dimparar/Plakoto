@@ -95,21 +95,21 @@ Board::~Board()
 {
     for (auto i : this->checkersBlack)
     {
-        delete i;
+        if (i)
+        {
+            delete i;
+        }
     }
+    this->checkersBlack.clear();
 
     for (auto i : this->checkersWhite)
     {
-        delete i;
-    }
-
-    for (auto i : this->checkersOnPosition)
-    {
-        for (auto j : i.second)
+        if (i)
         {
-            delete j;
+            delete i;
         }
     }
+    this->checkersWhite.clear();
 
     delete this->lastMove;
 
@@ -160,6 +160,8 @@ void Board::makeMove(Move* move, Board* board)
 
 void Board::makeSecondMove(Move* move, Board* board)
 {
+    board->lastMove = move;
+
     if (move->getFromPosition_1() != -1)
     {
         if (!board->checkersOnPosition[move->getFromPosition_1()].empty() && move->getFromPosition_1() != move->getFromPosition())
@@ -180,6 +182,7 @@ void Board::makeSecondMove(Move* move, Board* board)
 
 }
 
+
 /// <summary>
 /// 
 /// </summary>
@@ -189,21 +192,36 @@ void Board::makeSecondMove(Move* move, Board* board)
 /// <returns></returns>
 bool Board::isValidMove(Move* move, Dice* dice, int turn)
 {
-    if (this->checkersOnPosition[move->getFromPosition()].empty())
+
+
+    if (!this->checkersOnPosition[move->getToPosition_1()].empty())
     {
-        return false;
+        if (this->checkersOnPosition[move->getToPosition_1()].back()->getColor() != this->checkersOnPosition[move->getFromPosition_1()].back()->getColor())
+        {// here we have the top checker of the column with the same color of the checker that we want to move
+
+            if (this->checkersOnPosition[move->getToPosition_1()].size() > 1)
+            {// here we have only one checker with different color in the to_position column. So we "eat" it
+                return false;
+            }
+        }
     }
-    else
+
+    // first check if the position doesn't have any checkers
+    if (!this->checkersOnPosition[move->getToPosition()].empty())
     {
-        if (this->checkersOnPosition[move->getFromPosition()].back()->getColor() != turn)
-        {
-            return false;
+        if (this->checkersOnPosition[move->getToPosition()].back()->getColor() != this->checkersOnPosition[move->getFromPosition()].back()->getColor())
+        {// here we have the top checker of the column with the same color of the checker that we want to move
+
+            if (this->checkersOnPosition[move->getToPosition()].size() > 1)
+            {// here we have only one checker with different color in the to_position column. So we "eat" it
+                return false;
+            }
         }
     }
 
     //We must check also for the number of moves if there right according to the indexes of the dices
-
-    if (std::abs(move->getFromPosition() - move->getToPosition()) == dice->getDice1() + dice->getDice2())
+ 
+    if (std::abs(move->getFromPosition() - move->getToPosition()) == dice->getDice1() + dice->getDice2() && !dice->getPlayedDice1() && !dice->getPlayedDice2())
     {
         dice->setPlayedDice1(true);
         dice->setPlayedDice2(true);
@@ -221,7 +239,6 @@ bool Board::isValidMove(Move* move, Dice* dice, int turn)
         return false;
     }
 
-
     return true;
 }
 
@@ -238,18 +255,8 @@ void Board::updateCheckersOnPosition()
     }*/
 }
 
-void Board::updateCheckers(int color, Board* board)
+void Board::updateUserMove(int color, Board* board)
 {
-    std::vector<Checker*> checkers;
-    if (color == WHITE)
-    {
-        checkers = board->checkersWhite;
-    }
-    else
-    {
-        checkers = board->checkersBlack;
-    }
-
     int checkerID = -1;
     int checkerID_1 = -1;
 
@@ -272,28 +279,165 @@ void Board::updateCheckers(int color, Board* board)
         }
     }
 
-    // set phase color if all checkers are in the exit table
-    if (board->getColorPhase(color) == STANDARD)
+    if (board->moveChecker)
     {
-        int counter = 0;
-        bool can_bear_off = false;
-        for (auto i : checkers)
-        {
-            if (i->getPosition() == 25 || i->getPosition() == 0)
-            {
-                counter++;
-            }
-        }
+        board->moveChecker = false;
 
-        if (counter == 15)
+        size_t size = board->checkersOnPosition[board->lastMove->getFromPosition()].size();
+        size_t size_table_item = board->checkersOnPosition[board->lastMove->getFromPosition()].size();
+
+        if (size <= 6)
         {
-            if (color == BLACK)
+            size_table_item -= 1;
+            if (board->lastMove->getFromPosition() < 13)
             {
-                board->blackPhase = BEAR_OFF;
+                int table_item = 15 - size_table_item;
+                int count = 0;
+
+                board->checkersOnPosition[board->lastMove->getFromPosition()].erase(board->checkersOnPosition[board->lastMove->getFromPosition()].begin() + this->searchForID(board->checkersOnPosition[board->lastMove->getFromPosition()], checkerID, color));
+                board->table[table_item].replace(board->positions[board->lastMove->getFromPosition()], 1, " ");
             }
             else
             {
-                board->whitePhase = BEAR_OFF;
+                int table_item = 3 + size_table_item;
+                board->checkersOnPosition[board->lastMove->getFromPosition()].erase(board->checkersOnPosition[board->lastMove->getFromPosition()].begin() + this->searchForID(board->checkersOnPosition[board->lastMove->getFromPosition()], checkerID, color));
+                board->table[table_item].replace(board->positions[board->lastMove->getFromPosition()], 1, " ");
+            }
+        }
+        else if (size <= 12)
+        {
+            size_table_item -= 7;
+            if (board->lastMove->getFromPosition() < 13)
+            {
+                int table_item = 15 - size_table_item;
+                int table_position = board->positions[board->lastMove->getFromPosition()] + 1;
+                board->checkersOnPosition[board->lastMove->getFromPosition()].erase(board->checkersOnPosition[board->lastMove->getFromPosition()].begin() + this->searchForID(board->checkersOnPosition[board->lastMove->getFromPosition()], checkerID, color));
+                board->table[table_item].replace(table_position, 1, " ");
+            }
+            else
+            {
+                int table_item = 3 + size_table_item;
+                int table_position = board->positions[board->lastMove->getFromPosition()] + 1;
+                board->checkersOnPosition[board->lastMove->getFromPosition()].erase(board->checkersOnPosition[board->lastMove->getFromPosition()].begin() + this->searchForID(board->checkersOnPosition[board->lastMove->getFromPosition()], checkerID, color));
+                board->table[table_item].replace(table_position, 1, " ");
+            }
+        }
+        else if (size < 17)
+        {
+            size_table_item -= 13;
+            if (board->lastMove->getFromPosition() < 13)
+            {
+                int table_item = 15 - size_table_item;
+                int table_position = board->positions[board->lastMove->getFromPosition()] + 2;
+                board->checkersOnPosition[board->lastMove->getFromPosition()].erase(board->checkersOnPosition[board->lastMove->getFromPosition()].begin() + this->searchForID(board->checkersOnPosition[board->lastMove->getFromPosition()], checkerID, color));
+                board->table[table_item].replace(table_position, 1, " ");
+            }
+            else
+            {
+                int table_item = 3 + size_table_item;
+                int table_position = board->positions[board->lastMove->getFromPosition()] + 2;
+                board->checkersOnPosition[board->lastMove->getFromPosition()].erase(board->checkersOnPosition[board->lastMove->getFromPosition()].begin() + this->searchForID(board->checkersOnPosition[board->lastMove->getFromPosition()], checkerID, color));
+                board->table[table_item].replace(table_position, 1, " ");
+            }
+        }
+
+        if (board->lastMove->getFromPosition_1() != -1)
+        {
+            size_t size_1 = board->checkersOnPosition[board->lastMove->getFromPosition_1()].size();
+            size_t size_table_item_1 = board->checkersOnPosition[board->lastMove->getFromPosition_1()].size();
+
+            if (size_1 <= 6)
+            {
+                size_table_item_1 -= 1;
+                if (board->lastMove->getFromPosition_1() < 13)
+                {
+                    int table_item_1 = 15 - size_table_item_1;
+                    board->checkersOnPosition[board->lastMove->getFromPosition_1()].erase(board->checkersOnPosition[board->lastMove->getFromPosition_1()].begin() + this->searchForID(board->checkersOnPosition[board->lastMove->getFromPosition_1()], checkerID_1, color));
+                    board->table[table_item_1].replace(board->positions[board->lastMove->getFromPosition_1()], 1, " ");
+                }
+                else
+                {
+                    int table_item_1 = 3 + size_table_item_1;
+                    board->checkersOnPosition[board->lastMove->getFromPosition_1()].erase(board->checkersOnPosition[board->lastMove->getFromPosition_1()].begin() + this->searchForID(board->checkersOnPosition[board->lastMove->getFromPosition_1()], checkerID_1, color));
+                    board->table[table_item_1].replace(board->positions[board->lastMove->getFromPosition_1()], 1, " ");
+                }
+            }
+            else if (size_1 <= 12)
+            {
+                size_table_item_1 -= 7;
+                if (board->lastMove->getFromPosition_1() < 13)
+                {
+                    int table_item_1 = 15 - size_table_item_1;
+                    int table_position_1 = board->positions[board->lastMove->getFromPosition_1()] + 1;
+                    board->checkersOnPosition[board->lastMove->getFromPosition_1()].erase(board->checkersOnPosition[board->lastMove->getFromPosition_1()].begin() + this->searchForID(board->checkersOnPosition[board->lastMove->getFromPosition_1()], checkerID_1, color));
+                    board->table[table_item_1].replace(table_position_1, 1, " ");
+                }
+                else
+                {
+                    int table_item_1 = 3 + size_table_item_1;
+                    int table_position_1 = board->positions[board->lastMove->getFromPosition_1()] + 1;
+                    board->checkersOnPosition[board->lastMove->getFromPosition_1()].erase(board->checkersOnPosition[board->lastMove->getFromPosition_1()].begin() + this->searchForID(board->checkersOnPosition[board->lastMove->getFromPosition_1()], checkerID_1, color));
+                    board->table[table_item_1].replace(table_position_1, 1, " ");
+                }
+            }
+            else if (size_1 < 17)
+            {
+                size_table_item_1 -= 13;
+                if (board->lastMove->getFromPosition_1() < 13)
+                {
+                    int table_item_1 = 15 - size_table_item_1;
+                    int table_position_1 = board->positions[board->lastMove->getFromPosition_1()] + 2;
+                    board->checkersOnPosition[board->lastMove->getFromPosition_1()].erase(board->checkersOnPosition[board->lastMove->getFromPosition_1()].begin() + this->searchForID(board->checkersOnPosition[board->lastMove->getFromPosition_1()], checkerID_1, color));
+                    board->table[table_item_1].replace(table_position_1, 1, " ");
+                }
+                else
+                {
+                    int table_item_1 = 3 + size_table_item_1;
+                    int table_position_1 = board->positions[board->lastMove->getFromPosition_1()] + 2;
+                    board->checkersOnPosition[board->lastMove->getFromPosition_1()].erase(board->checkersOnPosition[board->lastMove->getFromPosition_1()].begin() + this->searchForID(board->checkersOnPosition[board->lastMove->getFromPosition_1()], checkerID_1, color));
+                    board->table[table_item_1].replace(table_position_1, 1, " ");
+                }
+            }
+            checkerID = -1;
+            checkerID_1 = -1;
+        }
+    }
+}
+
+void Board::updateCheckers(int color, Board* board)
+{
+    std::vector<Checker*> checkers;
+    if (color == WHITE)
+    {
+        checkers = board->checkersWhite;
+    }
+    else
+    {
+        checkers = board->checkersBlack;
+    }
+
+    int checkerID = -1;
+    int checkerID_1 = -1;
+
+
+    if (board->lastMove && board->getLastMove()->getFromPosition() != -1)
+    {
+        if (board->getLastMove()->getFromPosition() == board->getLastMove()->getFromPosition_1())
+        {
+
+            checkerID = board->checkersOnPosition[board->getLastMove()->getFromPosition()].back()->getId();
+
+            
+            checkerID_1 = board->checkersOnPosition[board->getLastMove()->getFromPosition_1()][board->checkersOnPosition[board->getLastMove()->getFromPosition_1()].size() - 2]->getId();
+        }
+        else
+        {
+
+            checkerID = board->checkersOnPosition[board->getLastMove()->getFromPosition()].back()->getId();
+
+            if (board->getLastMove()->getFromPosition_1() != -1)
+            {
+                checkerID_1 = board->checkersOnPosition[board->getLastMove()->getFromPosition_1()].back()->getId();
             }
         }
     }
@@ -398,10 +542,10 @@ void Board::updateCheckers(int color, Board* board)
 
             }
 
-            if (test > 2)
-            {
-                std::cout << "test > 2" << "\n";
-            }
+            //if (test > 2)
+            //{
+            //    std::cout << "test > 2" << "\n";
+            //}
 
             /*this->printTable();
             system("pause");*/
@@ -411,6 +555,7 @@ void Board::updateCheckers(int color, Board* board)
 
     if (board->moveChecker)
     {
+
         board->moveChecker = false;
 
         size_t size = board->checkersOnPosition[board->lastMove->getFromPosition()].size();
@@ -470,6 +615,7 @@ void Board::updateCheckers(int color, Board* board)
                 board->table[table_item].replace(table_position, 1, " ");
             }
         }
+
 
         if (board->lastMove->getFromPosition_1() != -1)
         {
@@ -635,7 +781,7 @@ std::vector<Board*> Board::getChildren(int color, Dice* dice, Board* board)
             from_multiple_pos2 = dice->getDice2();
         }
 
-        // In this first case ,we check if the checker can move the sum(dice1,dice2)
+        // In this first case, we check if the checker can move the sum(dice1,dice2)
         for (auto i : board->getCheckers(color))
         {
             if (this->canCheckerMove(i))
@@ -643,6 +789,7 @@ std::vector<Board*> Board::getChildren(int color, Dice* dice, Board* board)
                 if (this->isValidMoveAI(i->getPosition() + from_multiple_pos, i))
                 {
                     int to_position = i->getPosition() + from_multiple_pos;
+                    
                     if (color == BLACK)
                     {
                         if (to_position > 25)
@@ -662,6 +809,7 @@ std::vector<Board*> Board::getChildren(int color, Dice* dice, Board* board)
                     Move* move = new Move(i->getPosition(), to_position);
                     this->makeMove(move, child);
                     this->updateCheckers(color, child);
+                    child->updatePhase(color);
                     children.push_back(child);
                     one_dice_cannot_be_played = false;
                 }
@@ -699,48 +847,133 @@ std::vector<Board*> Board::getChildren(int color, Dice* dice, Board* board)
                             {
                                 // Here the bot can play the two checkers with the first checker follows the index of the second dice and vice versa
 
+                                int to_position_1 = i->getPosition() + from_multiple_pos1;
+
+                                if (color == BLACK)
+                                {
+                                    if (to_position_1 > 25)
+                                    {
+                                        to_position_1 = 25;
+                                    }
+                                }
+                                else
+                                {
+                                    if (to_position_1 < 0)
+                                    {
+                                        to_position_1 = 0;
+                                    }
+                                }
+
+
                                 Board* child = new Board(board);
-                                Move* move = new Move(i->getPosition(), i->getPosition() + from_multiple_pos1);
+                                Move* move = new Move(i->getPosition(), to_position_1);
                              
                                 child->makeMove(move, child);
 
                                 // checks phase
                                 child->updatePhase(color);
 
+                                int to_position_2;
                                 if (child->isValidMoveAI(j->getPosition() + from_multiple_pos2, j))
                                 {
+                                    to_position_2 = j->getPosition() + from_multiple_pos2;
+
+                                    if (color == BLACK)
+                                    {
+                                        if (to_position_2 > 25)
+                                        {
+                                            to_position_2 = 25;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (to_position_2 < 0)
+                                        {
+                                            to_position_2 = 0;
+                                        }
+                                    }
+
+                                    //std::cout << "2 moves" << "\n";
                                     move->setFromPosition_1(j->getPosition());
-                                    move->setToPosition_1(j->getPosition() + from_multiple_pos2);
+                                    move->setToPosition_1(to_position_2);
 
                                     child->makeSecondMove(move, child);
+
+                                    this->updateCheckers(color, child);
+                                    children.push_back(child);
+                                    one_dice_cannot_be_played = false;
                                 }
 
                                 // TO DO: updateCheckers -> need to update for setPosition_1 ...
-                                this->updateCheckers(color, child);
                                 //std::cout << "ID 1st checker " << i->getId() << "ID 2nd checker " << j->getId() << std::endl;
                                 //std::cout << "A from pos: " << move->getFromPosition() << " A to pos: " << move->getToPosition() << std::endl;
                                 //std::cout << "A from pos 1: " << move->getFromPosition_1() << " A to pos 1 : " << move->getToPosition_1() << std::endl;
-                                children.push_back(child);
-                                one_dice_cannot_be_played = false;
                             }
 
-                            if (this->isValidMoveAI(i->getPosition() + from_multiple_pos2, i) && this->isValidMoveAI(j->getPosition() + from_multiple_pos1, j))
+                            if (this->isValidMoveAI(i->getPosition() + from_multiple_pos2, i))
                             {
                                 //Here the bot can play the two checkers with the first checker follows the index of the second dice and vice versa
 
+                                int to_position_1 = i->getPosition() + from_multiple_pos2;
+
+                                if (color == BLACK)
+                                {
+                                    if (to_position_1 > 25)
+                                    {
+                                        to_position_1 = 25;
+                                    }
+                                }
+                                else
+                                {
+                                    if (to_position_1 < 0)
+                                    {
+                                        to_position_1 = 0;
+                                    }
+                                }
+
                                 Board* child = new Board(board);
-                                Move* move = new Move(i->getPosition(), i->getPosition() + from_multiple_pos2);
-                                move->setFromPosition_1(j->getPosition());
-                                move->setToPosition_1(j->getPosition() + from_multiple_pos1);
+                                Move* move = new Move(i->getPosition(), to_position_1);
+
                                 this->makeMove(move, child);
 
+                                child->updatePhase(color);
+
+                                int to_position_2;
+                                if (child->isValidMoveAI(j->getPosition() + from_multiple_pos1, j))
+                                {
+                                    to_position_2 = j->getPosition() + from_multiple_pos1;
+
+                                    if (color == BLACK)
+                                    {
+                                        if (to_position_2 > 25)
+                                        {
+                                            to_position_2 = 25;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (to_position_2 < 0)
+                                        {
+                                            to_position_2 = 0;
+                                        }
+                                    }
+
+                                    //std::cout << "2 moves" << "\n";
+                                    move->setFromPosition_1(j->getPosition());
+                                    move->setToPosition_1(to_position_2);
+
+                                    child->makeSecondMove(move, child);
+                                    this->updateCheckers(color, child);
+
+                                    children.push_back(child);
+                                    one_dice_cannot_be_played = false;
+                                }
+
                                 // TO DO: updateCheckers -> need to update for setPosition_1 ...
-                                this->updateCheckers(color, child);
                                 //std::cout << "ID 1st checker " << i->getId() << "ID 2nd checker " << j->getId() << std::endl;
                                 //std::cout << "B from pos: " << move->getFromPosition() << " B to pos: " << move->getToPosition() << std::endl;
                                 //std::cout << "B from pos 1: " << move->getFromPosition_1() << " B to pos 1 : " << move->getToPosition_1() << std::endl;
-                                children.push_back(child);
-                                one_dice_cannot_be_played = false;
+
                             }
                         }
                     }
@@ -763,6 +996,8 @@ std::vector<Board*> Board::getChildren(int color, Dice* dice, Board* board)
                         Board* child = new Board(this);
                         Move* move = new Move(i->getPosition(), i->getPosition() + from_multiple_pos1);
                         this->makeMove(move, child);
+                        child->updatePhase(color);
+
                         this->updateCheckers(color, child);
                         children.push_back(child);
                     }
@@ -775,6 +1010,8 @@ std::vector<Board*> Board::getChildren(int color, Dice* dice, Board* board)
                         Board* child = new Board(this);
                         Move* move = new Move(i->getPosition(), i->getPosition() + from_multiple_pos2);
                         this->makeMove(move, child);
+                        child->updatePhase(color);
+
                         this->updateCheckers(color, child);
                         children.push_back(child);
                     }
@@ -797,9 +1034,19 @@ void Board::updatePhase(int color)
 
         for (auto i : this->getCheckers(color))
         {
-            if (i->getPosition() == 25 || i->getPosition() == 0)
+            if (color == BLACK)
             {
-                counter++;
+                if (i->getPosition() > 18)
+                {
+                    counter++;
+                }
+            }
+            else
+            {
+                if (i->getPosition() < 7)
+                {
+                    counter++;
+                }
             }
         }
 
@@ -853,6 +1100,8 @@ bool Board::isValidToPosition(int position, Checker* checker)
             }
         }
 
+        //std::cout << "isValid -> false" << "\n"; // occurs when one checker cant play because it is at the last quarter of the board
+        // that's why we get moves with one dice played (error?)
         return false;
     }
 
@@ -921,7 +1170,6 @@ int Board::getColorPhase(int color)
 
 bool Board::isTerminal()
 {
-    /*
     int sum_b = 0;
     int sum_w = 0;
 
@@ -942,10 +1190,10 @@ bool Board::isTerminal()
     }
 
     if (sum_w == 15 || sum_b == 15)
+    {
         return true;
+    }
 
-    return false;
-    */
     return false;
 }
 
