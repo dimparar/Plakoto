@@ -10,10 +10,17 @@ class Board
 {
 private:
 
+	bool colored_table;
+
+	bool tie;
+
 	int blackPhase;
 	int whitePhase;
 
 	std::vector<std::string> table;
+
+	int blackToBearOff;
+	int whiteToBearOff;
 
 	std::map<int, int> positions;
 
@@ -39,9 +46,12 @@ public:
 	void createTable();
 
 	void makeMove(Move* move, Board* board);
+	void makeSecondMove(Move* move, Board* board);
+
 	bool isValidMove(Move* move, Dice* dice, int turn);
 
 	void updateCheckersOnPosition();
+	void updateUserMove(int color, Board* board);
 
 	void updateCheckers(int color, Board* board);
 	void printTable();
@@ -52,7 +62,9 @@ public:
 	bool canSecondCheckerMove(Checker* checker);
 	std::vector<Board*> getChildren(int color, Dice* dice, Board* board);
 
-	bool isValidMoveAI(int position,Checker* checker);
+	void updatePhase(int color);
+
+	bool isValidMoveAI(int position, Checker* checker);
 
 	bool isValidToPosition(int position, Checker* checker);
 
@@ -60,17 +72,13 @@ public:
 
 	std::map< int, std::vector<Checker*> > getCheckersOnPosition();
 
-	int searchForID(std::vector<Checker*> checkers, int id, int color); // returns 
+	int searchForID(std::vector<Checker*> checkers, int id, int color); 
 
 	int getColorPhase(int color);
+	bool getTie();
 
-	/// <summary>
-	/// checks if the state of the board comes to an end
-	/// </summary>
-	/// <returns>
-	///  true if all the black checkers are collected in the position 0(by default)
-	///  or if all the white checkers are collected in the position 25(by default)
-	/// </returns>
+	int evaluate();
+
 	bool isTerminal();
 };
 

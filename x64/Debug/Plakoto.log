@@ -1,0 +1,5 @@
+﻿  Main.cpp
+F:\CPP Projects\Plakoto_27_11_2022_final\PlayerCPU.h(2,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+F:\CPP Projects\Plakoto_27_11_2022_final\Dice.h(12,27): warning C4305: 'initializing': truncation from 'double' to 'const float'
+F:\CPP Projects\Plakoto_27_11_2022_final\Dice.h(13,32): warning C4305: 'initializing': truncation from 'double' to 'const float'
+  Plakoto.vcxproj -> F:\CPP Projects\Plakoto_27_11_2022_final\x64\Debug\Plakoto.exe

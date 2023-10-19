@@ -13,6 +13,7 @@ private:
 	
 	//Board
 	Board* board;
+	bool coloredTable;
 
 	//Dice
 	Dice* dice;
@@ -20,7 +21,6 @@ private:
 	//Move
 	Move* move;
 	bool secondMove; // played one dice
-
 
 	bool wrongInput;
 
@@ -37,18 +37,12 @@ public:
 	virtual ~Game();
 	void GameLoop();
 
-	Move* parseInput(std::string input, int turn);
-
 	void setCurrentTurn(int currentTurn);
 	int getCurrentTurn();
 
-	void bearOff();
+	void setBlackDepth(int max_depth);
+	void setWhiteDepth(int max_depth);
+
 };
 
-
-/*
-*	TO DO:
-	- Double move not implemented yet -> problem when the dice indexes are the same
-	- isTerminal() 
-*/
 

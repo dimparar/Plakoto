@@ -18,12 +18,10 @@ PlayerCPU::PlayerCPU(int color, int max_depth)
 {
 	this->initCheckers(color);
 	this->maxDepth = max_depth;
-	//myFile_Handler.open("C:/Users/trian/OneDrive/Υπολογιστής/Plakoto_Project/File_1.txt");
 }
 
 PlayerCPU::~PlayerCPU()
 {
-	//myFile_Handler.close();
 	for (auto i : this->checkers)
 	{
 		delete i;
@@ -42,14 +40,10 @@ Move* PlayerCPU::MiniMax(Board* board, Dice* dice)
 	}
 }
 
-/// <summary>
-/// Max creates for the dice the possible move-children and for every child it calls the chance 
-/// the children of the max node are chance nodes
-/// </summary>
-/// <param name="board"></param>
-/// <param name="dice"></param>
-/// <param name="depth"></param>
-/// <returns>move with value max(for every chance-child take the chance.node.value)</returns>
+
+// Max creates for the dice the possible move-children and for every child it calls the chance 
+// the children of the max node are chance nodes
+// returns a move with value max(for every chance-child take the chance.node.value)
 Move* PlayerCPU::Max(Board* board, Dice* dice, int depth)
 {
 
@@ -61,22 +55,11 @@ Move* PlayerCPU::Max(Board* board, Dice* dice, int depth)
 	Move* maxMove;
 	maxMove = new Move(INT_MIN);
 	
-	//std::vector<std::string> practice;
 	for (auto child : children)
 	{
-		//std::cout << "here" << "\n";
 		Move* move;
 		move = this->chance(child, dice, depth + 1);
-		
-		/*std::string s = std::to_string(dice->getDice1()) + " " + std::to_string(dice->getDice2()) + ' ' + std::to_string(depth) + " " + " Max for loop children" + " from_position: " + std::to_string(move->getFromPosition()) + " Toposition: " + std::to_string(move->getToPosition());
-		
-		if (move->getFromPosition() != -1)
-		{
-			s +=  "  from position 1 : " + std::to_string(move->getFromPosition_1()) + "  from position 1 : " + std::to_string(move->getToPosition_1()) + "\n";
-		}*/
-		//practice.push_back(s);
-		//std::cout << " Possible Move " << move->getFromPosition() << " to " << move->getToPosition() << "\n";
-		//std::cout << " Possible Move " << move->getFromPosition_1() << " to " << move->getToPosition_1() << "\n";
+				
 		if (move->getValue() >= maxMove->getValue())
 		{
 			if (move->getValue() == maxMove->getValue())
@@ -100,26 +83,14 @@ Move* PlayerCPU::Max(Board* board, Dice* dice, int depth)
 			}
 		}
 	}
-	/*for (auto i : practice)
-	{
-		myFile_Handler << i;
-	}
-	myFile_Handler << "\n\n\n\n";*/
-	/*std::cout << "MaxMove:" << maxMove->getFromPosition() << " to " << maxMove->getToPosition() << "\n";
-	std::cout << "MaxMove_1:" << maxMove->getFromPosition_1() << " to " << maxMove->getToPosition_1() << "\n";
-	std::cout << "---------------------------------------------------------------" << "\n";*/
 
 	return maxMove;
 }
 
-/// <summary>
-/// Min creates for the dice the possible move-children and for every child it calls the chance 
-/// the children of the min node are chance nodes
-/// </summary>
-/// <param name="board"></param>
-/// <param name="dice"></param>
-/// <param name="depth"></param>
-/// <returns>move with value min(for every chance-child take the chance.node.value)</returns>
+
+// Min creates for the dice the possible move-children and for every child it calls the chance 
+// the children of the min node are chance nodes
+// returns a move with value min(for every chance-child take the chance.node.value)
 Move* PlayerCPU::Min(Board* board, Dice* dice, int depth)
 {
 
@@ -131,19 +102,11 @@ Move* PlayerCPU::Min(Board* board, Dice* dice, int depth)
 	Move* minMove;
 	minMove = new Move(INT_MAX);
 
-	//std::vector<std::string> practice;
 	for (auto child : children)
 	{
 		Move* move;
 		move = this->chance(child, dice, depth + 1);
 		
-		/*std::string s = std::to_string(dice->getDice1()) + " " + std::to_string(dice->getDice2()) + ' ' + std::to_string(depth) + " " + " Min for loop children" + " from_position: " + std::to_string(move->getFromPosition()) + " Toposition: " + std::to_string(move->getToPosition());
-
-		if (move->getFromPosition() != -1)
-		{
-			s += "  from position 1 : " + std::to_string(move->getFromPosition_1()) + "  from position 1 : " + std::to_string(move->getToPosition_1()) + "\n";
-		}
-		practice.push_back(s);*/
 		if (move->getValue() <= minMove->getValue())
 		{
 			if (move->getValue() == minMove->getValue())
@@ -168,34 +131,20 @@ Move* PlayerCPU::Min(Board* board, Dice* dice, int depth)
 			}
 		}
 	}
-	/*for (auto i : practice)
-	{
-		myFile_Handler << i;
-	}
-	myFile_Handler << "\n\n\n\n";*/
-
-	/*std::cout << "MinMove:" << minMove->getFromPosition() << " to " << minMove->getToPosition() << "\n";
-	std::cout << "MinMove_1:" << minMove->getFromPosition_1() << " to " << minMove->getToPosition_1() << "\n";
-	std::cout << "---------------------------------------------------------------" << "\n";*/
 
 	return minMove;
 }
 
-/// <summary>
-/// Creates all the possible dice and for every child calls min or max
-/// </summary>
-/// <param name="board"></param>
-/// <param name="dice"></param>
-/// <param name="depth"></param>
-/// <returns> the move with value: (sum += possibility*(move->value))</returns>
+// Creates all the possible dice and for every child calls min or max
+// returns the move with 
+//returns (sum += possibility*(move->value))
 Move* PlayerCPU::chance(Board* board, Dice* dice, int depth)
 {
 
 	if (board->isTerminal() || depth == this->maxDepth)
 	{
-		// TO DO
 		Move* move;
-		move = new Move(board->getLastMove()->getFromPosition(), board->getLastMove()->getToPosition(), 2); // evaluate
+		move = new Move(board->getLastMove()->getFromPosition(), board->getLastMove()->getToPosition(), board->evaluate());
 		move->setFromPosition_1(board->getLastMove()->getFromPosition_1());
 		move->setToPosition_1(board->getLastMove()->getToPosition_1());
 		
@@ -205,15 +154,12 @@ Move* PlayerCPU::chance(Board* board, Dice* dice, int depth)
 	std::vector<Dice*> children = dice->getChildren();
 
 	float sum = 0.0;
-	int test = 0;
 	std::vector<Move*> Moves;
 	for (auto child : children)
 	{
 		Move* move;
 		if (this->currentNode == MIN)
 		{
-			//std::cout << "dice: " << test << "\n";
-			test++;
 			move = Max(board, child, depth + 1);
 			this->currentNode = MIN;
 		}
@@ -251,10 +197,6 @@ Move* PlayerCPU::chance(Board* board, Dice* dice, int depth)
 		}
 	}
 
-	/*std::cout << "ChanceMove:" << chanceMove->getFromPosition() << " to " << chanceMove->getToPosition() << "\n";
-	std::cout << "ChanceMove_1:" << chanceMove->getFromPosition_1() << " to " << chanceMove->getToPosition_1() << "\n";
-	std::cout << "---------------------------------------------------------------" << "\n";*/
-
 	return chanceMove;
 }
 
@@ -266,4 +208,14 @@ std::vector<Checker*> PlayerCPU::getCheckers()
 void PlayerCPU::setCheckersPosition(int checker, int newPos)
 {
 	this->checkers[checker]->setPosition(newPos);
+}
+
+void PlayerCPU::setDepth(int max_depth)
+{
+	this->maxDepth = max_depth;
+}
+
+int PlayerCPU::getDepth()
+{
+	return this->maxDepth;
 }

@@ -14,7 +14,6 @@ private:
 	int maxDepth;
 
 	void initCheckers(int color);
-	//std::ofstream myFile_Handler;
 
 public:
 	PlayerCPU(int color, int max_depth);
@@ -30,5 +29,8 @@ public:
 	std::vector<Checker*> getCheckers();
 
 	void setCheckersPosition(int checker, int newPos);
+
+	void setDepth(int max_depth);
+	int getDepth();
 };
 

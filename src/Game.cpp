@@ -28,16 +28,14 @@ void Game::initDice()
 	this->dice = new Dice();
 }
 
-
-
 //Public
 Game::Game()
 {
+	this->coloredTable = false;
 	this->currentTurn = BLACK;
 	this->gameTerminated = false;
 	this->move = nullptr;
 	this->wrongInput = false;
-	this->secondMove = false;
 
 	this->initDice();
 	this->initPlayer();
@@ -47,9 +45,6 @@ Game::Game()
 
 Game::~Game()
 {
-	delete this->cpuWhite;
-	delete this->cpuBlack;
-
 	delete this->dice;
 
 	delete this->board;
@@ -57,9 +52,11 @@ Game::~Game()
 
 void Game::GameLoop()
 {
-	
+	std::cout << "White Depth: " << this->cpuWhite->getDepth() << "\n";
+	std::cout << "Black Depth: " << this->cpuBlack->getDepth() << "\n";
+
+	int counter_no_play = 0;
 	this->board->createTable();
-	//this->board->updateCheckersOnPosition();
 
 	this->dice->rollTheDice(); // roll the dice
 
@@ -67,17 +64,16 @@ void Game::GameLoop()
 	this->board->updateCheckers(WHITE, this->board);
 
 	this->board->printTable();
+	
+	system("pause");
+	std::system("cls");
 
 	//Game Loop
-	while (!this->gameTerminated)
+	while (!this->board->isTerminal())
 	{	
-		
 		std::cout << "Dice 1: " << this->dice->getDice1() << "\n";
 		std::cout << "Dice 2: " << this->dice->getDice2() << "\n";
 
-		/// <summary>
-		/// To parakatw 8a alax8ei gia thn emfanish tou player
-		/// </summary>
 		std::string playername;
 		if (this->getCurrentTurn() == WHITE)
 		{
@@ -91,36 +87,6 @@ void Game::GameLoop()
 		std::cout << playername << "plays now" << std::endl;
 		if (this->getCurrentTurn() == WHITE)
 		{
-			//play round
-			//this->cpuWhite->minimax();//Board!
-			
-			//std::string player_move;
-
-			//while (!this->wrongInput && !this->move || this->wrongInput)
-			//{
-			//	//std::cout << "Move -> ex. move from 1 to 5 -> 1-5" << "\n";
-			//	std::cout << "Your Move: ";
-			//	std::getline(std::cin, player_move);
-			//	
-			//	this->move = this->parseInput(player_move, this->getCurrentTurn());
-
-			//}
-
-			//if (this->dice->getPlayedDice1() && this->dice->getPlayedDice2())
-			//{
-			//	this->setCurrentTurn(BLACK);
-			//	this->dice->rollTheDice();
-			//	this->dice->setPlayedDice1(false);
-			//	this->dice->setPlayedDice2(false);
-			//	
-			//}
-			//else
-			//{
-			//	this->secondMove = true;
-			//}
-			//this->board->makeMove(this->move, this->board);
-			//this->move = nullptr;
-
 			Move* move = this->cpuWhite->MiniMax(this->board, this->dice);
 			
 			if (move->getFromPosition() != -1)
@@ -128,15 +94,21 @@ void Game::GameLoop()
 				this->board->makeMove(move, this->board);
 				std::cout << "Chosen Move " << move->getFromPosition() << " to " << move->getToPosition() << "\n";
 				std::cout << "Chosen Move " << move->getFromPosition_1() << " to " << move->getToPosition_1() << "\n";
+				this->board->updatePhase(WHITE);
+
+				if (move->getFromPosition_1() != -1)
+				{
+					this->board->makeSecondMove(move, this->board);
+				}
 
 				this->board->updateCheckers(WHITE, this->board);
-				this->board->printTable();
 			}
 			else
 			{
 				std::cout << "No move to play!" << "\n";
 			}
 
+			this->dice->rollTheDice();
 
 			this->setCurrentTurn(BLACK);
 
@@ -148,188 +120,64 @@ void Game::GameLoop()
 
 			if (move->getFromPosition() != -1)
 			{
+				counter_no_play = 0;
 				this->board->makeMove(move, this->board);
 				std::cout << "Chosen Move " << move->getFromPosition() << " to " << move->getToPosition() << "\n";
 				std::cout << "Chosen Move " << move->getFromPosition_1() << " to " << move->getToPosition_1() << "\n";
+				this->board->updatePhase(BLACK);
+
+				if (move->getFromPosition_1() != -1)
+				{
+					this->board->makeSecondMove(move, this->board);
+				}
 
 				this->board->updateCheckers(BLACK, this->board);
-				this->board->printTable();
 			}
 			else
 			{
 				std::cout << "No move to play!" << "\n";
 			}
 
-			//std::string player_move;
-
-			//while (!this->wrongInput && !this->move || this->wrongInput)
-			//{
-			//	//std::cout << "Move -> ex. move from 1 to 5 -> 1-5" << "\n";
-			//	std::cout << "Your Move: ";
-			//	std::getline(std::cin, player_move);
-
-			//	this->move = this->parseInput(player_move, this->getCurrentTurn());
-			//}
-
-			//// if black has played both moves then white plays next
-			//if (this->dice->getPlayedDice1() && this->dice->getPlayedDice2())
-			//{
-			//	this->setCurrentTurn(WHITE);
-			//	this->dice->rollTheDice();
-			//	this->dice->setPlayedDice1(false);
-			//	this->dice->setPlayedDice2(false);
-			//	this->secondMove = false;
-			//}
-			//else
-			//{
-			//	this->secondMove = true;
-			//}
-
-			//this->board->makeMove(this->move, this->board);
-			
 			this->setCurrentTurn(WHITE);
-			this->move = nullptr;
+
+			this->dice->rollTheDice();
+
 		}
 
-		this->dice->rollTheDice(); // roll the dice
-
-		/*std::cout << "BLACK Checkers" << "\n";
-		for (auto i : this->board->getCheckers(BLACK))
-		{
-			std::cout << "Id: " << i->getId() << " Position: " << i->getPosition() << "\n";
-		}
-
-		std::cout << "WHITE Checkers" << "\n";
-		for (auto i : this->board->getCheckers(WHITE))
-		{
-			std::cout << "Id: " << i->getId() << " Position: " << i->getPosition() << "\n";
-		}
-		std::cout << "---------------------------------------------------------------------" << "\n";
-
-		std::cout << "CheckersOnPosition" << "\n";
-		for (auto i : this->board->getCheckersOnPosition())
-		{
-			for (auto j : i.second)
-			{
-				std::cout << "Id: " << j->getId() << " Position: " << j->getPosition() << "\n";
-			}
-		}*/
-
-		//system("cls"); // clear terminal
+		this->board->printTable();
+		std::system("pause");
+		std::system("cls");
 	}
 
-}
-
-Move* Game::parseInput(std::string input, int turn)
-{
-	int i = 0;
-	std::string from_position;
-	std::string to_position;
-	this->wrongInput = false;
-
-	while (!this->wrongInput)
+	int sum_black = 0;
+	std::cout << "Game Over" << "\n";
+	for (auto bl : board->getCheckers(BLACK))
 	{
-		if (input[i] == '-')
-		{
-			break;
-		}
-
-		from_position += input[i];
-		i++;
-
-		if (i > input.length())
-		{
-			this->wrongInput = true;
-		}
+		if (bl->getPosition() == 25)
+			sum_black++;
 	}
 
-	if (!this->wrongInput)
+	int sum_white = 0;
+	for (auto wh : board->getCheckers(WHITE))
 	{
-		i++;
-		while (input[i])
-		{
-			to_position += input[i];
-			i++;
-		}
+		if (wh->getPosition() == 0)
+			sum_white++;
 	}
 
-	// check input
-
-	for (auto i : from_position)
+	if (this->board->getTie())
 	{
-		if (!std::isdigit(i))
-		{
-			this->wrongInput = true;
-			break;
-		}
+		std::cout <<  "It's a tie\n";
 	}
-
-	if (!this->wrongInput)
+	else if (sum_black > sum_white)
 	{
-		for (auto i : to_position)
-		{
-			if (!std::isdigit(i))
-			{
-				this->wrongInput = true;
-				break;
-			}
-		}
-	}
-
-	if (!this->wrongInput)
-	{
-		if (!(std::stoi(from_position) >= 1 && std::stoi(from_position) <= 24 && std::stoi(to_position) >= 1 && std::stoi(to_position) <= 24))
-		{
-			this->wrongInput = true;
-		}
-		if (turn == WHITE)// from the top to the bottom check that the WHITE doesn't go backwards
-		{
-			if (!(std::stoi(to_position) - std::stoi(from_position) < 0))
-			{
-				this->wrongInput = true;
-			}
-
-		}
-		else if (turn == BLACK)// from the bottom to the top check that the BLACK doesn't go backwards
-		{
-			if (!(std::stoi(to_position) - std::stoi(from_position) > 0))
-			{
-				this->wrongInput = true;
-			}
-		}
-	}
-
-	if (this->wrongInput)
-	{
-		std::cout << "Not a valid move::error_1" << std::endl << std::endl;
-		return nullptr;
+		std::cout << "Winner is: Black\n";
 	}
 	else
 	{
-		Move* move;
-		if (!this->secondMove) // true: played only one dice or both
-		{
-			move = new Move(std::stoi(from_position), std::stoi(to_position));
-		}
-		else
-		{
-			move = new Move(std::stoi(from_position), std::stoi(to_position));
-			move->setFromPosition_1(this->board->getLastMove()->getFromPosition());
-			move->setToPosition_1(this->board->getLastMove()->getToPosition());
-		}
-
-		if (board->isValidMove(move, dice, turn))
-		{
-			this->wrongInput = false;
-			return move;
-		}
-		else
-		{
-			std::cout << "Not a valid move::error_2" << std::endl << std::endl;
-			return nullptr;
-		}
+		std::cout << "Winner is: White\n" ;
 	}
-	
+
+	//system("pause");
 }
 
 void Game::setCurrentTurn(int currentTurn)
@@ -342,9 +190,13 @@ int Game::getCurrentTurn()
 	return this->currentTurn;
 }
 
-void Game::bearOff()
+void Game::setBlackDepth(int max_depth)
 {
-	//for (auto i : this->)
-
-
+	this->cpuBlack->setDepth(max_depth);
 }
+
+void Game::setWhiteDepth(int max_depth)
+{
+	this->cpuWhite->setDepth(max_depth);
+}
+
